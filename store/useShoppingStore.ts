@@ -14,6 +14,7 @@ type ShoppingStore = {
 	toggleBought: (id: string, index?: number) => void;
 	removeBought: () => void;
 	updateQuantity: (id: string, index: number, newQuantity: number) => void;
+	removeFromShoppingList: (id: string, index?: number) => void;
 };
 
 export const useShoppingStore = create<ShoppingStore>((set) => ({
@@ -51,6 +52,26 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 				return item;
 			}),
 		}));
+	},
+	
+	removeFromShoppingList: (id: string, index?: number) => {
+		set((state) => {
+			if (index !== undefined) {
+				// Remove specific item by index
+				return {
+					shoppingList: state.shoppingList.filter((_, idx) => idx !== index),
+				};
+			} else {
+				// Get the index of the last item with this id
+				const items = state.shoppingList.filter(item => item.id === id);
+				if (items.length === 0) return { shoppingList: state.shoppingList };
+				
+				const lastIndex = state.shoppingList.lastIndexOf(items[items.length - 1]);
+				return {
+					shoppingList: state.shoppingList.filter((_, idx) => idx !== lastIndex),
+				};
+			}
+		});
 	},
 }));
 

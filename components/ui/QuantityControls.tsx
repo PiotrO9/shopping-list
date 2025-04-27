@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 
 type QuantityControlsProps = {
@@ -18,23 +18,35 @@ function QuantityControls({
 	onSave,
 	compact = false
 }: QuantityControlsProps) {
+	// Keep local state for smoother interaction
+	const [localQuantity, setLocalQuantity] = useState(quantity);
+	
+	// Update local state when quantity prop changes
+	useEffect(() => {
+		setLocalQuantity(quantity);
+	}, [quantity]);
 	
 	function handleQuantityChange(text: string) {
 		const newValue = parseFloat(text);
 		if (!isNaN(newValue) && newValue > 0) {
+			setLocalQuantity(newValue);
 			onChangeQuantity(newValue);
 		}
 	}
 
 	function handleIncrement() {
-		let increment = getIncrementValue(quantity, unit);
-		onChangeQuantity(parseFloat((quantity + increment).toFixed(2)));
+		const increment = getIncrementValue(localQuantity, unit);
+		const newValue = parseFloat((localQuantity + increment).toFixed(2));
+		setLocalQuantity(newValue);
+		onChangeQuantity(newValue);
 	}
 
 	function handleDecrement() {
-		let decrement = getIncrementValue(quantity, unit);
-		const newValue = parseFloat((quantity - decrement).toFixed(2));
-		onChangeQuantity(newValue > 0 ? newValue : quantity);
+		const decrement = getIncrementValue(localQuantity, unit);
+		const newValue = parseFloat((localQuantity - decrement).toFixed(2));
+		const finalValue = newValue > 0 ? newValue : localQuantity;
+		setLocalQuantity(finalValue);
+		onChangeQuantity(finalValue);
 	}
 	
 	function getIncrementValue(value: number, unitType: string): number {
@@ -52,11 +64,11 @@ function QuantityControls({
 	}
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, compact && styles.compactContainer]}>
 			<TouchableOpacity 
 				style={[styles.button, compact && styles.smallButton]}
 				onPress={handleDecrement}
-				disabled={quantity <= 0.25}
+				disabled={localQuantity <= 0.25}
 			>
 				<Text style={styles.buttonText}>−</Text>
 			</TouchableOpacity>
@@ -64,7 +76,7 @@ function QuantityControls({
 			<View style={styles.quantityContainer}>
 				<TextInput
 					style={[styles.input, compact && styles.smallInput]}
-					value={quantity.toString()}
+					value={localQuantity.toString()}
 					onChangeText={handleQuantityChange}
 					keyboardType="numeric"
 					selectTextOnFocus
@@ -95,6 +107,9 @@ const styles = StyleSheet.create({
 	container: {
 		flexDirection: 'row',
 		alignItems: 'center',
+	},
+	compactContainer: {
+		flexWrap: 'nowrap',
 	},
 	button: {
 		width: 32,

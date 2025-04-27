@@ -41,6 +41,7 @@ const categoryRanges = [
 function AllProductsScreen() {
 	const navigation = useNavigation();
 	const [searchText, setSearchText] = useState('');
+	const [isQuickMode, setIsQuickMode] = useState(false);
 
 	function handleClose() {
 		navigation.goBack();
@@ -92,7 +93,14 @@ function AllProductsScreen() {
 				
 				<Text style={styles.headerTitle}>All Products</Text>
 				
-				<View style={styles.spacer} />
+				<TouchableOpacity 
+					style={[styles.modeButton, isQuickMode && styles.activeButton]}
+					onPress={() => setIsQuickMode(!isQuickMode)}
+					accessibilityLabel={isQuickMode ? "Switch to normal mode" : "Switch to quick edit mode"}
+					accessibilityRole="button"
+				>
+					<Text style={styles.modeButtonText}>{isQuickMode ? "Normal" : "Quick Edit"}</Text>
+				</TouchableOpacity>
 			</View>
 			
 			<View style={styles.searchContainer}>
@@ -114,6 +122,7 @@ function AllProductsScreen() {
 						name={item.name}
 						quantity={item.quantity}
 						unit={item.unit}
+						isEditing={isQuickMode}
 					/>
 				)}
 				renderSectionHeader={({ section: { title } }) => (
@@ -161,8 +170,19 @@ const styles = StyleSheet.create({
 		color: 'white',
 		fontWeight: 'bold',
 	},
-	spacer: {
-		width: 32,
+	modeButton: {
+		backgroundColor: 'rgba(255, 255, 255, 0.2)',
+		paddingHorizontal: 10,
+		paddingVertical: 5,
+		borderRadius: 12,
+	},
+	activeButton: {
+		backgroundColor: 'rgba(255, 255, 255, 0.4)',
+	},
+	modeButtonText: {
+		color: 'white',
+		fontWeight: '600',
+		fontSize: 14,
 	},
 	searchContainer: {
 		padding: 12,
