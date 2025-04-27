@@ -1,0 +1,159 @@
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+
+type QuantityControlsProps = {
+	quantity: number;
+	unit: string;
+	onChangeQuantity: (newQuantity: number) => void;
+	showSaveButton?: boolean;
+	onSave?: () => void;
+	compact?: boolean;
+};
+
+function QuantityControls({ 
+	quantity, 
+	unit, 
+	onChangeQuantity, 
+	showSaveButton = false,
+	onSave,
+	compact = false
+}: QuantityControlsProps) {
+	
+	function handleQuantityChange(text: string) {
+		const newValue = parseFloat(text);
+		if (!isNaN(newValue) && newValue > 0) {
+			onChangeQuantity(newValue);
+		}
+	}
+
+	function handleIncrement() {
+		let increment = getIncrementValue(quantity, unit);
+		onChangeQuantity(parseFloat((quantity + increment).toFixed(2)));
+	}
+
+	function handleDecrement() {
+		let decrement = getIncrementValue(quantity, unit);
+		const newValue = parseFloat((quantity - decrement).toFixed(2));
+		onChangeQuantity(newValue > 0 ? newValue : quantity);
+	}
+	
+	function getIncrementValue(value: number, unitType: string): number {
+		if (unitType === 'g' || unitType === 'ml') {
+			if (value >= 1000) return 500;
+			else if (value >= 500) return 100;
+			else if (value >= 100) return 50;
+			else return 25;
+		} else if (unitType === 'kg' || unitType === 'l') {
+			if (value >= 5) return 1;
+			else if (value >= 2) return 0.5;
+			else return 0.25;
+		}
+		return 1; // Default for pcs, bottles, etc.
+	}
+
+	return (
+		<View style={styles.container}>
+			<TouchableOpacity 
+				style={[styles.button, compact && styles.smallButton]}
+				onPress={handleDecrement}
+				disabled={quantity <= 0.25}
+			>
+				<Text style={styles.buttonText}>−</Text>
+			</TouchableOpacity>
+			
+			<View style={styles.quantityContainer}>
+				<TextInput
+					style={[styles.input, compact && styles.smallInput]}
+					value={quantity.toString()}
+					onChangeText={handleQuantityChange}
+					keyboardType="numeric"
+					selectTextOnFocus
+				/>
+				<Text style={styles.unitText}>{unit}</Text>
+			</View>
+			
+			<TouchableOpacity 
+				style={[styles.button, compact && styles.smallButton]}
+				onPress={handleIncrement}
+			>
+				<Text style={styles.buttonText}>+</Text>
+			</TouchableOpacity>
+			
+			{showSaveButton && onSave && (
+				<TouchableOpacity 
+					style={styles.saveButton}
+					onPress={onSave}
+				>
+					<Text style={styles.saveButtonText}>Save</Text>
+				</TouchableOpacity>
+			)}
+		</View>
+	);
+}
+
+const styles = StyleSheet.create({
+	container: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	button: {
+		width: 32,
+		height: 32,
+		borderRadius: 16,
+		backgroundColor: '#f0f0f0',
+		justifyContent: 'center',
+		alignItems: 'center',
+		borderWidth: 1,
+		borderColor: '#e0e0e0',
+		marginHorizontal: 2,
+	},
+	smallButton: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+	},
+	buttonText: {
+		fontSize: 16,
+		fontWeight: 'bold',
+		color: '#4CAF50',
+	},
+	quantityContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginHorizontal: 8,
+		padding: 4,
+		backgroundColor: '#f0f0f0',
+		borderRadius: 4,
+		borderWidth: 1,
+		borderColor: '#e0e0e0',
+	},
+	input: {
+		width: 48,
+		fontSize: 16,
+		textAlign: 'center',
+		paddingVertical: 0,
+	},
+	smallInput: {
+		width: 40,
+		fontSize: 14,
+	},
+	unitText: {
+		fontSize: 14,
+		color: '#666',
+		marginLeft: 4,
+	},
+	saveButton: {
+		backgroundColor: '#4CAF50',
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 4,
+		marginLeft: 8,
+	},
+	saveButtonText: {
+		color: 'white',
+		fontWeight: '600',
+		fontSize: 14,
+	},
+});
+
+export default QuantityControls; 
