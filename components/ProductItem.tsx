@@ -2,6 +2,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useShoppingStore } from '../store/useShoppingStore';
 import QuantityControls from './ui/QuantityControls';
+import Animated, { 
+	useSharedValue, 
+	useAnimatedStyle, 
+	withTiming, 
+	withSequence,
+	withSpring,
+	Easing
+} from 'react-native-reanimated';
 
 type ProductItemProps = {
 	id: string;
@@ -26,6 +34,13 @@ function ProductItem({
 	const removeFromShoppingList = useShoppingStore((state) => state.removeFromShoppingList);
 	const shoppingList = useShoppingStore((state) => state.shoppingList);
 	
+	// Animation values
+	const addButtonScale = useSharedValue(1);
+	const addButtonColor = useSharedValue(0);
+	const removeButtonScale = useSharedValue(1);
+	const itemOpacity = useSharedValue(0);
+	const itemTranslateY = useSharedValue(20);
+	
 	// Use external isEditing state if provided, otherwise use internal state
 	const isEditing = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
 	
@@ -40,10 +55,26 @@ function ProductItem({
 		if (itemsInList.length === 0) return 0;
 		return itemsInList.reduce((total, item) => total + item.quantity, 0);
 	}, [itemsInList]);
-
+	
+	// Animate item appearance on mount
 	useEffect(() => {
-		setSelectedQuantity(quantity);
-	}, [quantity]);
+		itemOpacity.value = withTiming(1, { duration: 300 });
+		itemTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
+	}, []);
+	
+	// Animate add button when clicked
+	useEffect(() => {
+		if (added) {
+			addButtonScale.value = withSequence(
+				withTiming(0.9, { duration: 100 }),
+				withTiming(1.1, { duration: 150 }),
+				withTiming(1, { duration: 150 })
+			);
+			addButtonColor.value = withTiming(1, { duration: 150 });
+		} else {
+			addButtonColor.value = withTiming(0, { duration: 300 });
+		}
+	}, [added]);
 
 	function handleAddToShoppingList() {
 		addToShoppingList({
@@ -62,6 +93,13 @@ function ProductItem({
 	
 	function handleRemoveFromShoppingList() {
 		if (itemsInList.length > 0) {
+			// Animate the remove button
+			removeButtonScale.value = withSequence(
+				withTiming(0.8, { duration: 100 }),
+				withTiming(1.2, { duration: 150 }),
+				withTiming(1, { duration: 200 })
+			);
+			
 			removeFromShoppingList(id);
 			setAddCount(prev => Math.max(0, prev - 1));
 		}
@@ -81,9 +119,31 @@ function ProductItem({
 	function formatQuantity(qty: number, unitType: string): string {
 		return `${qty} ${unitType}`;
 	}
+	
+	// Animated styles
+	const animatedItemStyle = useAnimatedStyle(() => {
+		return {
+			opacity: itemOpacity.value,
+			transform: [{ translateY: itemTranslateY.value }]
+		};
+	});
+	
+	const animatedAddButtonStyle = useAnimatedStyle(() => {
+		const backgroundColor = addButtonColor.value === 0 ? '#4CAF50' : '#8BC34A';
+		return {
+			backgroundColor,
+			transform: [{ scale: addButtonScale.value }]
+		};
+	});
+	
+	const animatedRemoveButtonStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ scale: removeButtonScale.value }]
+		};
+	});
 
 	return (
-		<View style={styles.container}>
+		<Animated.View style={[styles.container, animatedItemStyle]}>
 			<View style={styles.productInfo}>
 				<Text style={styles.name}>{name}</Text>
 				<View style={styles.detailsRow}>
@@ -116,28 +176,32 @@ function ProductItem({
 			
 			<View style={styles.actionContainer}>
 				{itemsInList.length > 0 && (
-					<TouchableOpacity 
-						style={styles.actionButton}
-						onPress={handleRemoveFromShoppingList}
-						activeOpacity={0.7}
-						accessibilityLabel={`Remove one ${name} from shopping list`}
-						accessibilityRole="button"
-					>
-						<Text style={styles.actionButtonText}>−</Text>
-					</TouchableOpacity>
+					<Animated.View style={animatedRemoveButtonStyle}>
+						<TouchableOpacity 
+							style={styles.actionButton}
+							onPress={handleRemoveFromShoppingList}
+							activeOpacity={0.7}
+							accessibilityLabel={`Remove one ${name} from shopping list`}
+							accessibilityRole="button"
+						>
+							<Text style={styles.actionButtonText}>−</Text>
+						</TouchableOpacity>
+					</Animated.View>
 				)}
 				
-				<TouchableOpacity 
-					style={[styles.button, added && styles.addedButton]}
-					onPress={handleAddToShoppingList}
-					activeOpacity={0.7}
-					accessibilityLabel={`Add ${name} to shopping list`}
-					accessibilityRole="button"
-				>
-					<Text style={styles.buttonText}>{added ? 'Added' : 'Add'}</Text>
-				</TouchableOpacity>
+				<Animated.View style={animatedAddButtonStyle}>
+					<TouchableOpacity 
+						style={styles.button}
+						onPress={handleAddToShoppingList}
+						activeOpacity={0.7}
+						accessibilityLabel={`Add ${name} to shopping list`}
+						accessibilityRole="button"
+					>
+						<Text style={styles.buttonText}>{added ? 'Added' : 'Add'}</Text>
+					</TouchableOpacity>
+				</Animated.View>
 			</View>
-		</View>
+		</Animated.View>
 	);
 }
 
@@ -183,14 +247,10 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	button: {
-		backgroundColor: '#4CAF50',
 		paddingVertical: 8,
 		paddingHorizontal: 16,
 		borderRadius: 4,
 		marginLeft: 8,
-	},
-	addedButton: {
-		backgroundColor: '#8BC34A',
 	},
 	buttonText: {
 		color: 'white',

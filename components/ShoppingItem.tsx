@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { useShoppingStore } from '../store/useShoppingStore';
+import Checkbox from './ui/Checkbox';
+import Animated, { 
+	useSharedValue, 
+	useAnimatedStyle, 
+	withTiming, 
+	withSequence,
+	withDelay,
+	Easing
+} from 'react-native-reanimated';
 
 type ShoppingItemProps = {
 	id: string;
@@ -16,6 +25,43 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index }: Sho
 	const [editedQuantity, setEditedQuantity] = useState(quantity);
 	const toggleBought = useShoppingStore((state) => state.toggleBought);
 	const updateQuantity = useShoppingStore((state) => state.updateQuantity);
+	
+	// Animation values
+	const itemScale = useSharedValue(1);
+	const textOpacity = useSharedValue(1);
+	const backgroundOpacity = useSharedValue(0);
+
+	// Update animations when item is marked as bought/unbought
+	React.useEffect(() => {
+		if (isBought) {
+			itemScale.value = withSequence(
+				withTiming(0.95, { duration: 100 }),
+				withTiming(1, { duration: 300, easing: Easing.elastic(1.2) })
+			);
+			textOpacity.value = withTiming(0.6, { duration: 300 });
+			backgroundOpacity.value = withTiming(1, { duration: 300 });
+		} else {
+			itemScale.value = withSequence(
+				withTiming(1.02, { duration: 100 }),
+				withTiming(1, { duration: 300, easing: Easing.elastic(1.2) })
+			);
+			textOpacity.value = withTiming(1, { duration: 300 });
+			backgroundOpacity.value = withTiming(0, { duration: 300 });
+		}
+	}, [isBought]);
+
+	const animatedContainerStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ scale: itemScale.value }],
+			backgroundColor: backgroundOpacity.value === 0 ? 'white' : '#f0f9f0'
+		};
+	});
+
+	const animatedTextStyle = useAnimatedStyle(() => {
+		return {
+			opacity: textOpacity.value
+		};
+	});
 
 	function handleToggleBought() {
 		toggleBought(id, index);
@@ -78,109 +124,97 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index }: Sho
 
 	return (
 		<TouchableOpacity 
-			style={[styles.container, isBought && styles.boughtContainer]}
+			style={styles.touchableContainer}
 			onPress={handleToggleBought}
 			activeOpacity={0.7}
 			accessibilityLabel={`${name}, ${isBought ? 'in cart' : 'not in cart'}`}
 			accessibilityRole="checkbox"
 			accessibilityState={{ checked: isBought }}
 		>
-			<View style={[styles.checkbox, isBought && styles.checkedBox]}>
-				{isBought && <View style={styles.checkmark} />}
-			</View>
-			
-			<View style={styles.itemInfo}>
-				<Text style={[styles.name, isBought && styles.boughtText]}>{name}</Text>
+			<Animated.View style={[styles.container, animatedContainerStyle]}>
+				<Checkbox checked={isBought} />
 				
-				<View style={styles.quantityRow}>
-					{isEditing ? (
-						<View style={styles.quantityControls}>
-							<TouchableOpacity 
-								style={styles.smallButton}
-								onPress={handleDecrement}
-								disabled={editedQuantity <= 0.25}
-							>
-								<Text style={styles.smallButtonText}>−</Text>
-							</TouchableOpacity>
-							
-							<TextInput
-								style={styles.quantityInput}
-								value={editedQuantity.toString()}
-								onChangeText={handleQuantityChange}
-								keyboardType="numeric"
-								selectTextOnFocus
-								autoFocus
-							/>
-							
-							<Text style={styles.unitText}>{unit}</Text>
-							
-							<TouchableOpacity 
-								style={styles.smallButton}
-								onPress={handleIncrement}
-							>
-								<Text style={styles.smallButtonText}>+</Text>
-							</TouchableOpacity>
-							
-							<TouchableOpacity 
-								style={styles.saveButton}
-								onPress={handleSaveQuantity}
-							>
-								<Text style={styles.saveButtonText}>Save</Text>
+				<View style={styles.itemInfo}>
+					<Animated.Text style={[styles.name, isBought && styles.boughtText, animatedTextStyle]}>
+						{name}
+					</Animated.Text>
+					
+					<View style={styles.quantityRow}>
+						<View style={styles.quantityWrapper}>
+							<TouchableOpacity onPress={handleStartEditing} disabled={isEditing}>
+								<View style={styles.quantityWrapper}>
+									{!isEditing ? (
+										<>
+											<Animated.Text style={[styles.details, isBought && styles.boughtText, animatedTextStyle]}>
+												{quantity} {unit}
+											</Animated.Text>
+											<Text style={styles.editHint}>(tap to edit)</Text>
+										</>
+									) : (
+										<View style={styles.quantityControls}>
+											<TouchableOpacity 
+												style={styles.smallButton}
+												onPress={handleDecrement}
+												disabled={editedQuantity <= 0.25}
+											>
+												<Text style={styles.smallButtonText}>−</Text>
+											</TouchableOpacity>
+											
+											<TextInput
+												style={styles.quantityInput}
+												value={editedQuantity.toString()}
+												onChangeText={handleQuantityChange}
+												keyboardType="numeric"
+												selectTextOnFocus
+												onBlur={handleSaveQuantity}
+												autoFocus
+											/>
+											
+											<Text style={styles.unitText}>{unit}</Text>
+											
+											<TouchableOpacity 
+												style={styles.smallButton}
+												onPress={handleIncrement}
+											>
+												<Text style={styles.smallButtonText}>+</Text>
+											</TouchableOpacity>
+											
+											<TouchableOpacity 
+												style={styles.saveButton}
+												onPress={handleSaveQuantity}
+											>
+												<Text style={styles.saveButtonText}>Save</Text>
+											</TouchableOpacity>
+										</View>
+									)}
+								</View>
 							</TouchableOpacity>
 						</View>
-					) : (
-						<TouchableOpacity onPress={handleStartEditing} style={styles.quantityWrapper}>
-							<Text style={[styles.details, isBought && styles.boughtText]}>
-								{quantity} {unit}
-							</Text>
-							<Text style={styles.editHint}>(edit)</Text>
-						</TouchableOpacity>
-					)}
-					
-					<Text style={[styles.statusText, isBought && styles.inCartText]}>
-						{isBought ? 'In Cart' : 'To Buy'}
-					</Text>
+						
+						<Animated.Text style={[styles.statusText, isBought && styles.inCartText, animatedTextStyle]}>
+							{isBought ? 'In Cart' : 'To Buy'}
+						</Animated.Text>
+					</View>
 				</View>
-			</View>
+			</Animated.View>
 		</TouchableOpacity>
 	);
 }
 
 const styles = StyleSheet.create({
+	touchableContainer: {
+		overflow: 'hidden',
+	},
 	container: {
 		flexDirection: 'row',
 		padding: 16,
 		borderBottomWidth: 1,
 		borderBottomColor: '#e0e0e0',
 		alignItems: 'center',
-		backgroundColor: 'white',
-	},
-	boughtContainer: {
-		backgroundColor: '#f0f9f0',
-	},
-	checkbox: {
-		width: 24,
-		height: 24,
-		borderRadius: 12,
-		borderWidth: 2,
-		borderColor: '#4CAF50',
-		marginRight: 16,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	checkedBox: {
-		backgroundColor: '#4CAF50',
-	},
-	checkmark: {
-		width: 12,
-		height: 6,
-		borderLeftWidth: 2,
-		borderBottomWidth: 2,
-		borderColor: 'white',
-		transform: [{ rotate: '-45deg' }],
 	},
 	itemInfo: {
 		flex: 1,
+		marginLeft: 16,
 	},
 	name: {
 		fontSize: 16,
@@ -258,12 +292,12 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 4,
-		marginLeft: 4,
+		marginLeft: 8,
 	},
 	saveButtonText: {
 		color: 'white',
-		fontWeight: '600',
 		fontSize: 12,
+		fontWeight: '600',
 	},
 });
 

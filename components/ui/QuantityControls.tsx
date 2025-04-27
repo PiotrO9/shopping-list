@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import Animated, { 
+	useSharedValue, 
+	useAnimatedStyle, 
+	withTiming, 
+	withSequence,
+	withSpring,
+	Easing
+} from 'react-native-reanimated';
 
 type QuantityControlsProps = {
 	quantity: number;
@@ -21,6 +29,11 @@ function QuantityControls({
 	// Keep local state for smoother interaction
 	const [localQuantity, setLocalQuantity] = useState(quantity);
 	
+	// Animation values
+	const incrementScale = useSharedValue(1);
+	const decrementScale = useSharedValue(1);
+	const inputScale = useSharedValue(1);
+	
 	// Update local state when quantity prop changes
 	useEffect(() => {
 		setLocalQuantity(quantity);
@@ -31,6 +44,12 @@ function QuantityControls({
 		if (!isNaN(newValue) && newValue > 0) {
 			setLocalQuantity(newValue);
 			onChangeQuantity(newValue);
+			
+			// Animate input on change
+			inputScale.value = withSequence(
+				withTiming(1.05, { duration: 100 }),
+				withTiming(1, { duration: 150 })
+			);
 		}
 	}
 
@@ -39,6 +58,12 @@ function QuantityControls({
 		const newValue = parseFloat((localQuantity + increment).toFixed(2));
 		setLocalQuantity(newValue);
 		onChangeQuantity(newValue);
+		
+		// Animate the increment button
+		incrementScale.value = withSequence(
+			withTiming(0.85, { duration: 50 }),
+			withTiming(1, { duration: 150, easing: Easing.elastic(1.2) })
+		);
 	}
 
 	function handleDecrement() {
@@ -47,6 +72,12 @@ function QuantityControls({
 		const finalValue = newValue > 0 ? newValue : localQuantity;
 		setLocalQuantity(finalValue);
 		onChangeQuantity(finalValue);
+		
+		// Animate the decrement button
+		decrementScale.value = withSequence(
+			withTiming(0.85, { duration: 50 }),
+			withTiming(1, { duration: 150, easing: Easing.elastic(1.2) })
+		);
 	}
 	
 	function getIncrementValue(value: number, unitType: string): number {
@@ -62,18 +93,39 @@ function QuantityControls({
 		}
 		return 1; // Default for pcs, bottles, etc.
 	}
+	
+	// Animated styles
+	const animatedIncrementStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ scale: incrementScale.value }]
+		};
+	});
+	
+	const animatedDecrementStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ scale: decrementScale.value }]
+		};
+	});
+	
+	const animatedInputStyle = useAnimatedStyle(() => {
+		return {
+			transform: [{ scale: inputScale.value }]
+		};
+	});
 
 	return (
 		<View style={[styles.container, compact && styles.compactContainer]}>
-			<TouchableOpacity 
-				style={[styles.button, compact && styles.smallButton]}
-				onPress={handleDecrement}
-				disabled={localQuantity <= 0.25}
-			>
-				<Text style={styles.buttonText}>−</Text>
-			</TouchableOpacity>
+			<Animated.View style={animatedDecrementStyle}>
+				<TouchableOpacity 
+					style={[styles.button, compact && styles.smallButton]}
+					onPress={handleDecrement}
+					disabled={localQuantity <= 0.25}
+				>
+					<Text style={styles.buttonText}>−</Text>
+				</TouchableOpacity>
+			</Animated.View>
 			
-			<View style={styles.quantityContainer}>
+			<Animated.View style={[styles.quantityContainer, animatedInputStyle]}>
 				<TextInput
 					style={[styles.input, compact && styles.smallInput]}
 					value={localQuantity.toString()}
@@ -82,14 +134,16 @@ function QuantityControls({
 					selectTextOnFocus
 				/>
 				<Text style={styles.unitText}>{unit}</Text>
-			</View>
+			</Animated.View>
 			
-			<TouchableOpacity 
-				style={[styles.button, compact && styles.smallButton]}
-				onPress={handleIncrement}
-			>
-				<Text style={styles.buttonText}>+</Text>
-			</TouchableOpacity>
+			<Animated.View style={animatedIncrementStyle}>
+				<TouchableOpacity 
+					style={[styles.button, compact && styles.smallButton]}
+					onPress={handleIncrement}
+				>
+					<Text style={styles.buttonText}>+</Text>
+				</TouchableOpacity>
+			</Animated.View>
 			
 			{showSaveButton && onSave && (
 				<TouchableOpacity 
