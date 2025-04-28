@@ -13,20 +13,32 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+function groupShoppingList(shoppingList: Array<{ id: string; name: string; quantity: number; unit: string; isBought?: boolean; }>) {
+	const groups: Record<string, { id: string; name: string; quantity: number; unit: string; isBought: boolean; ids: string[] }> = {};
+	for (const item of shoppingList) {
+		const key = `${item.name}__${item.unit}`;
+		if (!groups[key]) {
+			groups[key] = { ...item, quantity: 0, isBought: false, ids: [] };
+		}
+		groups[key].quantity += item.quantity;
+		groups[key].isBought = groups[key].isBought || !!item.isBought;
+		groups[key].ids.push(item.id);
+	}
+	return Object.values(groups);
+}
+
 function ShoppingListScreen() {
 	const navigation = useNavigation<NavigationProp>();
 	const shoppingList = useShoppingStore((state) => state.shoppingList);
 	const removeBought = useShoppingStore((state) => state.removeBought);
+	const toggleBoughtByNameUnit = useShoppingStore((state) => state.toggleBoughtByNameUnit);
 
-	const inCartCount = shoppingList.filter(item => item.isBought).length;
-
-	const sortedShoppingList = useMemo(() => {
-		return [...shoppingList].sort((a, b) => {
-			if (a.isBought && !b.isBought) return 1;
-			if (!a.isBought && b.isBought) return -1;
-			return 0;
-		});
+	const groupedShoppingList = useMemo(() => {
+		const grouped = groupShoppingList(shoppingList);
+		return grouped.sort((a, b) => Number(a.isBought) - Number(b.isBought));
 	}, [shoppingList]);
+
+	const inCartCount = groupedShoppingList.filter(item => item.isBought).length;
 
 	function handleRemoveBought() {
 		removeBought();
@@ -42,7 +54,7 @@ function ShoppingListScreen() {
 				<Text style={styles.headerTitle}>Shopping List</Text>
 			</View>
 			
-			{shoppingList.length === 0 ? (
+			{groupedShoppingList.length === 0 ? (
 				<View style={styles.emptyContainer}>
 					<Text style={styles.emptyText}>Your shopping list is empty</Text>
 					<Text style={styles.emptySubtext}>Add products by clicking the + button</Text>
@@ -50,16 +62,16 @@ function ShoppingListScreen() {
 			) : (
 				<>
 					<FlatList
-						data={sortedShoppingList}
-						keyExtractor={(item, index) => `${item.id}-${index}`}
-						renderItem={({ item, index }) => (
+						data={groupedShoppingList}
+						keyExtractor={(item, index) => `${item.name}-${item.unit}`}
+						renderItem={({ item }: { item: { id: string; name: string; quantity: number; unit: string; isBought: boolean; ids: string[] } }) => (
 							<ShoppingItem
-								id={item.id}
+								id={item.ids[0]}
 								name={item.name}
 								quantity={item.quantity}
 								unit={item.unit}
 								isBought={item.isBought}
-								index={index}
+								onToggleBought={() => toggleBoughtByNameUnit(item.name, item.unit)}
 							/>
 						)}
 						contentContainerStyle={styles.list}

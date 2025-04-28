@@ -17,12 +17,11 @@ type ShoppingItemProps = {
 	quantity: number;
 	unit: string;
 	isBought?: boolean;
-	index: number;
+	index?: number;
+	onToggleBought?: () => void;
 };
 
-function ShoppingItem({ id, name, quantity, unit, isBought = false, index }: ShoppingItemProps) {
-	const toggleBought = useShoppingStore((state) => state.toggleBought);
-	
+function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onToggleBought }: ShoppingItemProps) {
 	// Animation values
 	const itemScale = useSharedValue(1);
 	const textOpacity = useSharedValue(1);
@@ -61,6 +60,12 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index }: Sho
 	});
 
 	function handleToggleBought() {
+		if (onToggleBought) {
+			onToggleBought();
+			return;
+		}
+		// fallback for legacy usage
+		const toggleBought = useShoppingStore((state) => state.toggleBought);
 		toggleBought(id, index);
 	}
 

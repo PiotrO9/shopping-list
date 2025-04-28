@@ -15,23 +15,44 @@ type ShoppingStore = {
 	removeBought: () => void;
 	updateQuantity: (id: string, index: number, newQuantity: number) => void;
 	removeFromShoppingList: (id: string, index?: number) => void;
+	toggleBoughtByNameUnit: (name: string, unit: string) => void;
 };
 
 export const useShoppingStore = create<ShoppingStore>((set) => ({
 	shoppingList: [],
 	
 	addToShoppingList: (product: Product) => {
-		set((state) => ({
-			shoppingList: [...state.shoppingList, { ...product, isBought: false }],
-		}));
+		set((state) => {
+			// Find if there's an existing item with the same name
+			const existingItemIndex = state.shoppingList.findIndex(
+				item => item.name === product.name && item.unit === product.unit
+			);
+
+			if (existingItemIndex !== -1) {
+				// If item exists, update its quantity
+				const updatedList = [...state.shoppingList];
+				updatedList[existingItemIndex] = {
+					...updatedList[existingItemIndex],
+					quantity: updatedList[existingItemIndex].quantity + product.quantity
+				};
+				return { shoppingList: updatedList };
+			} else {
+				// If item doesn't exist, add it as new
+				return {
+					shoppingList: [...state.shoppingList, { ...product, isBought: false }],
+				};
+			}
+		});
 	},
 	
 	toggleBought: (id: string, index?: number) => {
 		set((state) => ({
 			shoppingList: state.shoppingList.map((item, idx) => {
 				if (index !== undefined) {
+					// Only toggle the item at the specified index
 					return idx === index ? { ...item, isBought: !item.isBought } : item;
 				}
+				// If no index is provided, toggle by id
 				return item.id === id ? { ...item, isBought: !item.isBought } : item;
 			}),
 		}));
@@ -71,6 +92,24 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 					shoppingList: state.shoppingList.filter((_, idx) => idx !== lastIndex),
 				};
 			}
+		});
+	},
+	
+	toggleBoughtByNameUnit: (name: string, unit: string) => {
+		set((state) => {
+			// Find current isBought state for this group
+			const groupIsBought = state.shoppingList
+				.filter(item => item.name === name && item.unit === unit)
+				.some(item => item.isBought);
+
+			// Toggle all items in the group to the opposite of current state
+			return {
+				shoppingList: state.shoppingList.map(item =>
+					item.name === name && item.unit === unit
+						? { ...item, isBought: !groupIsBought }
+						: item
+				)
+			};
 		});
 	},
 }));
