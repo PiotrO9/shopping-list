@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import ProductItem from '../components/ProductItem';
 import { sampleProducts } from '../store/useShoppingStore';
 
-// Define product categories
 const categories = [
 	"Dairy & Eggs",
 	"Bread & Bakery",
@@ -21,7 +20,6 @@ const categories = [
 	"Dairy Alternatives"
 ];
 
-// Map products to their categories
 const categoryRanges = [
 	{ category: "Dairy & Eggs", start: 1, end: 8 },
 	{ category: "Bread & Bakery", start: 9, end: 16 },
@@ -47,7 +45,6 @@ function AllProductsScreen() {
 		navigation.goBack();
 	}
 
-	// Create sections for the section list
 	const sections = useMemo(() => {
 		return categoryRanges.map(range => {
 			const productsInCategory = sampleProducts.filter(product => {
@@ -62,7 +59,6 @@ function AllProductsScreen() {
 		});
 	}, []);
 
-	// Filter products based on search text
 	const filteredSections = useMemo(() => {
 		if (!searchText.trim()) {
 			return sections;
@@ -131,6 +127,11 @@ function AllProductsScreen() {
 					</View>
 				)}
 				stickySectionHeadersEnabled={true}
+				ListEmptyComponent={() => (
+					<View style={styles.emptyContainer}>
+						<Text style={styles.emptyText}>No products found matching "{searchText}"</Text>
+					</View>
+				)}
 			/>
 		</SafeAreaView>
 	);
@@ -207,6 +208,18 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: 'bold',
 		color: '#2e7d32',
+	},
+	emptyContainer: {
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'center',
+		padding: 20,
+		marginTop: 40,
+	},
+	emptyText: {
+		fontSize: 16,
+		color: '#666',
+		textAlign: 'center',
 	},
 });
 

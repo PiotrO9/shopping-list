@@ -150,6 +150,8 @@ const styles = StyleSheet.create({
 		padding: 16,
 		borderRadius: 8,
 		alignItems: 'center',
+		justifyContent: 'center',
+		display: 'flex',
 	},
 	buttonText: {
 		color: 'white',

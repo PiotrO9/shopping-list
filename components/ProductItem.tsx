@@ -32,7 +32,7 @@ function ProductItem({
 	const [internalIsEditing, setInternalIsEditing] = useState(false);
 	const [addCount, setAddCount] = useState(0);
 	const addToShoppingList = useShoppingStore((state) => state.addToShoppingList);
-	const removeFromShoppingList = useShoppingStore((state) => state.removeFromShoppingList);
+	const decreaseQuantity = useShoppingStore((state) => state.decreaseQuantity);
 	const shoppingList = useShoppingStore((state) => state.shoppingList);
 	
 	const addButtonScale = useSharedValue(1);
@@ -94,7 +94,7 @@ function ProductItem({
 				withTiming(1, { duration: 200 })
 			);
 			
-			removeFromShoppingList(id);
+			decreaseQuantity(id);
 			setAddCount(prev => Math.max(0, prev - 1));
 		}
 	}
@@ -245,6 +245,7 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 16,
+		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
@@ -253,6 +254,7 @@ const styles = StyleSheet.create({
 		width: 32,
 		height: 32,
 		borderRadius: 16,
+		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
 		marginRight: 8,
@@ -260,6 +262,7 @@ const styles = StyleSheet.create({
 	actionButtonText: {
 		color: 'white',
 		fontWeight: 'bold',
+		height: 16,
 	},
 });
 

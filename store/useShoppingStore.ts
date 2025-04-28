@@ -16,6 +16,7 @@ type ShoppingStore = {
 	updateQuantity: (id: string, index: number, newQuantity: number) => void;
 	removeFromShoppingList: (id: string, index?: number) => void;
 	toggleBoughtByNameUnit: (name: string, unit: string) => void;
+	decreaseQuantity: (id: string) => void;
 };
 
 export const useShoppingStore = create<ShoppingStore>((set) => ({
@@ -100,6 +101,33 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 						? { ...item, isBought: !groupIsBought }
 						: item
 				)
+			};
+		});
+	},
+	
+	decreaseQuantity: (id: string) => {
+		set((state) => {
+			const items = state.shoppingList.filter(item => item.id === id);
+			if (items.length === 0) return { shoppingList: state.shoppingList };
+			
+			const lastIndex = state.shoppingList.lastIndexOf(items[items.length - 1]);
+			const item = state.shoppingList[lastIndex];
+			
+			const baseProduct = sampleProducts.find(p => p.id === id);
+			if (!baseProduct) return { shoppingList: state.shoppingList };
+			
+			const decreaseAmount = baseProduct.quantity;
+			
+			if (item.quantity <= decreaseAmount) {
+				return {
+					shoppingList: state.shoppingList.filter((_, idx) => idx !== lastIndex),
+				};
+			}
+			
+			return {
+				shoppingList: state.shoppingList.map((item, idx) => 
+					idx === lastIndex ? { ...item, quantity: item.quantity - decreaseAmount } : item
+				),
 			};
 		});
 	},
