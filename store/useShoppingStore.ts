@@ -23,13 +23,11 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 	
 	addToShoppingList: (product: Product) => {
 		set((state) => {
-			// Find if there's an existing item with the same name
 			const existingItemIndex = state.shoppingList.findIndex(
 				item => item.name === product.name && item.unit === product.unit
 			);
 
 			if (existingItemIndex !== -1) {
-				// If item exists, update its quantity
 				const updatedList = [...state.shoppingList];
 				updatedList[existingItemIndex] = {
 					...updatedList[existingItemIndex],
@@ -37,7 +35,6 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 				};
 				return { shoppingList: updatedList };
 			} else {
-				// If item doesn't exist, add it as new
 				return {
 					shoppingList: [...state.shoppingList, { ...product, isBought: false }],
 				};
@@ -49,10 +46,8 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 		set((state) => ({
 			shoppingList: state.shoppingList.map((item, idx) => {
 				if (index !== undefined) {
-					// Only toggle the item at the specified index
 					return idx === index ? { ...item, isBought: !item.isBought } : item;
 				}
-				// If no index is provided, toggle by id
 				return item.id === id ? { ...item, isBought: !item.isBought } : item;
 			}),
 		}));
@@ -78,12 +73,10 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 	removeFromShoppingList: (id: string, index?: number) => {
 		set((state) => {
 			if (index !== undefined) {
-				// Remove specific item by index
 				return {
 					shoppingList: state.shoppingList.filter((_, idx) => idx !== index),
 				};
 			} else {
-				// Get the index of the last item with this id
 				const items = state.shoppingList.filter(item => item.id === id);
 				if (items.length === 0) return { shoppingList: state.shoppingList };
 				
@@ -97,12 +90,10 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 	
 	toggleBoughtByNameUnit: (name: string, unit: string) => {
 		set((state) => {
-			// Find current isBought state for this group
 			const groupIsBought = state.shoppingList
 				.filter(item => item.name === name && item.unit === unit)
 				.some(item => item.isBought);
 
-			// Toggle all items in the group to the opposite of current state
 			return {
 				shoppingList: state.shoppingList.map(item =>
 					item.name === name && item.unit === unit
@@ -123,7 +114,6 @@ export const sampleProducts: Product[] = [
 	{ id: '6', name: 'Cream', quantity: 200, unit: 'ml' },
 	{ id: '7', name: 'Cottage Cheese', quantity: 250, unit: 'g' },
 	{ id: '8', name: 'Sour Cream', quantity: 200, unit: 'ml' },
-	
 	{ id: '9', name: 'Bread', quantity: 1, unit: 'loaf' },
 	{ id: '10', name: 'Bagels', quantity: 6, unit: 'pcs' },
 	{ id: '11', name: 'Tortillas', quantity: 8, unit: 'pcs' },
@@ -132,7 +122,6 @@ export const sampleProducts: Product[] = [
 	{ id: '14', name: 'Hot Dog Buns', quantity: 8, unit: 'pcs' },
 	{ id: '15', name: 'Muffins', quantity: 6, unit: 'pcs' },
 	{ id: '16', name: 'Pita Bread', quantity: 6, unit: 'pcs' },
-	
 	{ id: '17', name: 'Apples', quantity: 6, unit: 'pcs' },
 	{ id: '18', name: 'Bananas', quantity: 1, unit: 'bunch' },
 	{ id: '19', name: 'Oranges', quantity: 6, unit: 'pcs' },
@@ -143,7 +132,6 @@ export const sampleProducts: Product[] = [
 	{ id: '24', name: 'Avocados', quantity: 2, unit: 'pcs' },
 	{ id: '25', name: 'Pears', quantity: 4, unit: 'pcs' },
 	{ id: '26', name: 'Watermelon', quantity: 1, unit: 'pc' },
-	
 	{ id: '27', name: 'Tomatoes', quantity: 4, unit: 'pcs' },
 	{ id: '28', name: 'Potatoes', quantity: 1, unit: 'kg' },
 	{ id: '29', name: 'Onions', quantity: 3, unit: 'pcs' },
@@ -156,7 +144,6 @@ export const sampleProducts: Product[] = [
 	{ id: '36', name: 'Spinach', quantity: 200, unit: 'g' },
 	{ id: '37', name: 'Mushrooms', quantity: 250, unit: 'g' },
 	{ id: '38', name: 'Zucchini', quantity: 2, unit: 'pcs' },
-	
 	{ id: '39', name: 'Chicken Breast', quantity: 500, unit: 'g' },
 	{ id: '40', name: 'Ground Beef', quantity: 500, unit: 'g' },
 	{ id: '41', name: 'Salmon Fillet', quantity: 300, unit: 'g' },
@@ -166,7 +153,6 @@ export const sampleProducts: Product[] = [
 	{ id: '45', name: 'Shrimp', quantity: 250, unit: 'g' },
 	{ id: '46', name: 'Turkey', quantity: 500, unit: 'g' },
 	{ id: '47', name: 'Ham', quantity: 200, unit: 'g' },
-	
 	{ id: '48', name: 'Rice', quantity: 1, unit: 'kg' },
 	{ id: '49', name: 'Pasta', quantity: 500, unit: 'g' },
 	{ id: '50', name: 'Flour', quantity: 1, unit: 'kg' },
@@ -181,20 +167,17 @@ export const sampleProducts: Product[] = [
 	{ id: '59', name: 'Jam', quantity: 300, unit: 'g' },
 	{ id: '60', name: 'Cereal', quantity: 500, unit: 'g' },
 	{ id: '61', name: 'Oats', quantity: 500, unit: 'g' },
-	
 	{ id: '62', name: 'Canned Tuna', quantity: 160, unit: 'g' },
 	{ id: '63', name: 'Canned Beans', quantity: 400, unit: 'g' },
 	{ id: '64', name: 'Canned Tomatoes', quantity: 400, unit: 'g' },
 	{ id: '65', name: 'Canned Corn', quantity: 300, unit: 'g' },
 	{ id: '66', name: 'Tomato Sauce', quantity: 500, unit: 'g' },
 	{ id: '67', name: 'Soup', quantity: 400, unit: 'ml' },
-	
 	{ id: '68', name: 'Frozen Peas', quantity: 500, unit: 'g' },
 	{ id: '69', name: 'Frozen Berries', quantity: 400, unit: 'g' },
 	{ id: '70', name: 'Frozen Pizza', quantity: 1, unit: 'pc' },
 	{ id: '71', name: 'Ice Cream', quantity: 1, unit: 'l' },
 	{ id: '72', name: 'Frozen Vegetables Mix', quantity: 500, unit: 'g' },
-	
 	{ id: '73', name: 'Coffee', quantity: 250, unit: 'g' },
 	{ id: '74', name: 'Tea', quantity: 50, unit: 'bags' },
 	{ id: '75', name: 'Orange Juice', quantity: 1, unit: 'l' },
@@ -202,14 +185,12 @@ export const sampleProducts: Product[] = [
 	{ id: '77', name: 'Water', quantity: 6, unit: 'bottles' },
 	{ id: '78', name: 'Beer', quantity: 6, unit: 'bottles' },
 	{ id: '79', name: 'Wine', quantity: 1, unit: 'bottle' },
-	
 	{ id: '80', name: 'Potato Chips', quantity: 200, unit: 'g' },
 	{ id: '81', name: 'Pretzels', quantity: 300, unit: 'g' },
 	{ id: '82', name: 'Nuts', quantity: 200, unit: 'g' },
 	{ id: '83', name: 'Chocolate', quantity: 100, unit: 'g' },
 	{ id: '84', name: 'Cookies', quantity: 300, unit: 'g' },
 	{ id: '85', name: 'Popcorn', quantity: 100, unit: 'g' },
-	
 	{ id: '86', name: 'Ketchup', quantity: 500, unit: 'ml' },
 	{ id: '87', name: 'Mustard', quantity: 200, unit: 'ml' },
 	{ id: '88', name: 'Mayonnaise', quantity: 400, unit: 'ml' },
@@ -217,14 +198,12 @@ export const sampleProducts: Product[] = [
 	{ id: '90', name: 'Hot Sauce', quantity: 150, unit: 'ml' },
 	{ id: '91', name: 'BBQ Sauce', quantity: 400, unit: 'ml' },
 	{ id: '92', name: 'Salad Dressing', quantity: 250, unit: 'ml' },
-	
 	{ id: '93', name: 'Baking Powder', quantity: 150, unit: 'g' },
 	{ id: '94', name: 'Baking Soda', quantity: 200, unit: 'g' },
 	{ id: '95', name: 'Vanilla Extract', quantity: 50, unit: 'ml' },
 	{ id: '96', name: 'Cocoa Powder', quantity: 200, unit: 'g' },
 	{ id: '97', name: 'Chocolate Chips', quantity: 300, unit: 'g' },
 	{ id: '98', name: 'Yeast', quantity: 10, unit: 'g' },
-	
 	{ id: '99', name: 'Almond Milk', quantity: 1, unit: 'l' },
 	{ id: '100', name: 'Tofu', quantity: 400, unit: 'g' },
 	{ id: '101', name: 'Oat Milk', quantity: 1, unit: 'l' },

@@ -7,7 +7,6 @@ import Animated, {
 	useAnimatedStyle, 
 	withTiming, 
 	withSequence,
-	withDelay,
 	Easing
 } from 'react-native-reanimated';
 
@@ -22,12 +21,10 @@ type ShoppingItemProps = {
 };
 
 function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onToggleBought }: ShoppingItemProps) {
-	// Animation values
 	const itemScale = useSharedValue(1);
 	const textOpacity = useSharedValue(1);
 	const backgroundOpacity = useSharedValue(0);
 
-	// Update animations when item is marked as bought/unbought
 	React.useEffect(() => {
 		if (isBought) {
 			itemScale.value = withSequence(
@@ -64,7 +61,6 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onTog
 			onToggleBought();
 			return;
 		}
-		// fallback for legacy usage
 		const toggleBought = useShoppingStore((state) => state.toggleBought);
 		toggleBought(id, index);
 	}

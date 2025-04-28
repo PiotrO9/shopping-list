@@ -26,15 +26,12 @@ function QuantityControls({
 	onSave,
 	compact = false
 }: QuantityControlsProps) {
-	// Keep local state for smoother interaction
 	const [localQuantity, setLocalQuantity] = useState(quantity);
 	
-	// Animation values
 	const incrementScale = useSharedValue(1);
 	const decrementScale = useSharedValue(1);
 	const inputScale = useSharedValue(1);
 	
-	// Update local state when quantity prop changes
 	useEffect(() => {
 		setLocalQuantity(quantity);
 	}, [quantity]);
@@ -45,7 +42,6 @@ function QuantityControls({
 			setLocalQuantity(newValue);
 			onChangeQuantity(newValue);
 			
-			// Animate input on change
 			inputScale.value = withSequence(
 				withTiming(1.05, { duration: 100 }),
 				withTiming(1, { duration: 150 })
@@ -59,7 +55,6 @@ function QuantityControls({
 		setLocalQuantity(newValue);
 		onChangeQuantity(newValue);
 		
-		// Animate the increment button
 		incrementScale.value = withSequence(
 			withTiming(0.85, { duration: 50 }),
 			withTiming(1, { duration: 150, easing: Easing.elastic(1.2) })
@@ -73,7 +68,6 @@ function QuantityControls({
 		setLocalQuantity(finalValue);
 		onChangeQuantity(finalValue);
 		
-		// Animate the decrement button
 		decrementScale.value = withSequence(
 			withTiming(0.85, { duration: 50 }),
 			withTiming(1, { duration: 150, easing: Easing.elastic(1.2) })
@@ -91,10 +85,9 @@ function QuantityControls({
 			else if (value >= 2) return 0.5;
 			else return 0.25;
 		}
-		return 1; // Default for pcs, bottles, etc.
+		return 1;
 	}
 	
-	// Animated styles
 	const animatedIncrementStyle = useAnimatedStyle(() => {
 		return {
 			transform: [{ scale: incrementScale.value }]

@@ -35,35 +35,29 @@ function ProductItem({
 	const removeFromShoppingList = useShoppingStore((state) => state.removeFromShoppingList);
 	const shoppingList = useShoppingStore((state) => state.shoppingList);
 	
-	// Animation values
 	const addButtonScale = useSharedValue(1);
 	const addButtonColor = useSharedValue(0);
 	const removeButtonScale = useSharedValue(1);
 	const itemOpacity = useSharedValue(0);
 	const itemTranslateY = useSharedValue(20);
 	
-	// Use external isEditing state if provided, otherwise use internal state
 	const isEditing = externalIsEditing !== undefined ? externalIsEditing : internalIsEditing;
 	
-	// Get items of this product in the shopping list
 	const itemsInList = useMemo(() => 
 		shoppingList.filter(item => item.id === id),
 		[shoppingList, id]
 	);
 	
-	// Calculate total quantity in list
 	const totalQuantityInList = useMemo(() => {
 		if (itemsInList.length === 0) return 0;
 		return itemsInList.reduce((total, item) => total + item.quantity, 0);
 	}, [itemsInList]);
 	
-	// Animate item appearance on mount
 	useEffect(() => {
 		itemOpacity.value = withTiming(1, { duration: 300 });
 		itemTranslateY.value = withTiming(0, { duration: 300, easing: Easing.out(Easing.cubic) });
 	}, []);
 	
-	// Animate add button when clicked
 	useEffect(() => {
 		if (added) {
 			addButtonScale.value = withSequence(
@@ -94,7 +88,6 @@ function ProductItem({
 	
 	function handleRemoveFromShoppingList() {
 		if (itemsInList.length > 0) {
-			// Animate the remove button
 			removeButtonScale.value = withSequence(
 				withTiming(0.8, { duration: 100 }),
 				withTiming(1.2, { duration: 150 }),
@@ -116,12 +109,10 @@ function ProductItem({
 		}
 	}
 
-	// Format the quantity with the unit
 	function formatQuantity(qty: number, unitType: string): string {
 		return `${qty} ${unitType}`;
 	}
 	
-	// Animated styles
 	const animatedItemStyle = useAnimatedStyle(() => {
 		return {
 			opacity: itemOpacity.value,
@@ -249,49 +240,26 @@ const styles = StyleSheet.create({
 		flexDirection: 'row',
 		alignItems: 'center',
 	},
-	button: {
-		width: 30,
-		height: 30,
-		borderRadius: 90,
-		justifyContent: 'center',
-		alignItems: 'center',
-	},
-	buttonText: {
-		color: 'white',
-		fontSize: 16,
-		fontWeight: 'bold',
-		textAlign: 'center',
-		borderRadius: '18',
-		lineHeight: 16,
-	},
 	actionButtonAdd: {
-		width: 30,
-		height: 30,
-		borderRadius: 15,
 		backgroundColor: '#4CAF50',
-		justifyContent: 'center',
+		width: 32,
+		height: 32,
+		borderRadius: 16,
 		alignItems: 'center',
-		display: 'flex',
+		justifyContent: 'center',
 	},
 	actionButtonRemove: {
-		width: 30,
-		height: 30,
-		borderRadius: 15,
 		backgroundColor: '#F44336',
-		justifyContent: 'center',
+		width: 32,
+		height: 32,
+		borderRadius: 16,
 		alignItems: 'center',
-		display: 'flex',
+		justifyContent: 'center',
+		marginRight: 8,
 	},
 	actionButtonText: {
 		color: 'white',
-		fontSize: 16,
 		fontWeight: 'bold',
-		textAlign: 'center',
-		display: 'flex',
-		justifyContent: 'center',
-		alignItems: 'center',
-		width: '100%',
-		height: '100%',
 	},
 });
 
