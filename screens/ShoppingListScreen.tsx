@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
 import ShoppingItem from '../components/ShoppingItem';
 import { useShoppingStore } from '../store/useShoppingStore';
 
@@ -85,7 +86,7 @@ function ShoppingListScreen() {
 				accessibilityLabel="Add products"
 				accessibilityRole="button"
 			>
-				<Text style={styles.fabText}>+</Text>
+				<MaterialIcons name="add" size={24} color="white" />
 			</TouchableOpacity>
 		</SafeAreaView>
 	);

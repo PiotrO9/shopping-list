@@ -10,6 +10,7 @@ import Animated, {
 	withSpring,
 	Easing
 } from 'react-native-reanimated';
+import { MaterialIcons } from '@expo/vector-icons';
 
 type ProductItemProps = {
 	id: string;
@@ -129,9 +130,7 @@ function ProductItem({
 	});
 	
 	const animatedAddButtonStyle = useAnimatedStyle(() => {
-		const backgroundColor = addButtonColor.value === 0 ? '#4CAF50' : '#8BC34A';
 		return {
-			backgroundColor,
 			transform: [{ scale: addButtonScale.value }]
 		};
 	});
@@ -178,26 +177,30 @@ function ProductItem({
 				{itemsInList.length > 0 && (
 					<Animated.View style={animatedRemoveButtonStyle}>
 						<TouchableOpacity 
-							style={styles.actionButton}
+							style={styles.actionButtonRemove}
 							onPress={handleRemoveFromShoppingList}
 							activeOpacity={0.7}
 							accessibilityLabel={`Remove one ${name} from shopping list`}
 							accessibilityRole="button"
 						>
-							<Text style={styles.actionButtonText}>−</Text>
+							<Text style={styles.actionButtonText}>
+								<MaterialIcons name="remove" size={16} color="white" />
+							</Text>
 						</TouchableOpacity>
 					</Animated.View>
 				)}
 				
 				<Animated.View style={animatedAddButtonStyle}>
 					<TouchableOpacity 
-						style={styles.button}
+						style={styles.actionButtonAdd}
 						onPress={handleAddToShoppingList}
 						activeOpacity={0.7}
 						accessibilityLabel={`Add ${name} to shopping list`}
 						accessibilityRole="button"
 					>
-						<Text style={styles.buttonText}>{added ? 'Added' : 'Add'}</Text>
+						<Text style={styles.actionButtonText}>
+							<MaterialIcons name="add" size={16} color="white" />
+						</Text>
 					</TouchableOpacity>
 				</Animated.View>
 			</View>
@@ -247,27 +250,48 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 	},
 	button: {
-		paddingVertical: 8,
-		paddingHorizontal: 16,
-		borderRadius: 4,
-		marginLeft: 8,
+		width: 30,
+		height: 30,
+		borderRadius: 90,
+		justifyContent: 'center',
+		alignItems: 'center',
 	},
 	buttonText: {
 		color: 'white',
-		fontWeight: '600',
+		fontSize: 16,
+		fontWeight: 'bold',
+		textAlign: 'center',
+		borderRadius: '18',
+		lineHeight: 16,
 	},
-	actionButton: {
+	actionButtonAdd: {
+		width: 30,
+		height: 30,
+		borderRadius: 15,
+		backgroundColor: '#4CAF50',
+		justifyContent: 'center',
+		alignItems: 'center',
+		display: 'flex',
+	},
+	actionButtonRemove: {
 		width: 30,
 		height: 30,
 		borderRadius: 15,
 		backgroundColor: '#F44336',
 		justifyContent: 'center',
 		alignItems: 'center',
+		display: 'flex',
 	},
 	actionButtonText: {
 		color: 'white',
 		fontSize: 16,
 		fontWeight: 'bold',
+		textAlign: 'center',
+		display: 'flex',
+		justifyContent: 'center',
+		alignItems: 'center',
+		width: '100%',
+		height: '100%',
 	},
 });
 
