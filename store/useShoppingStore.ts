@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Product = {
 	id: string;
@@ -11,6 +12,7 @@ type Product = {
 
 type ShoppingStore = {
 	shoppingList: Product[];
+	isInitialized: boolean;
 	addToShoppingList: (product: Product) => void;
 	toggleBought: (id: string, index?: number) => void;
 	removeBought: () => void;
@@ -18,10 +20,39 @@ type ShoppingStore = {
 	removeFromShoppingList: (id: string, index?: number) => void;
 	toggleBoughtByNameUnit: (name: string, unit: string) => void;
 	decreaseQuantity: (id: string) => void;
+	initializeStore: () => Promise<void>;
 };
 
-export const useShoppingStore = create<ShoppingStore>((set) => ({
+// Storage keys
+const STORAGE_KEY = '@shopping_list_store';
+
+// Helper function to persist state to AsyncStorage
+const saveToStorage = async (shoppingList: Product[]) => {
+	try {
+		await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(shoppingList));
+	} catch (error) {
+		console.error('Error saving shopping list to storage:', error);
+	}
+};
+
+export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 	shoppingList: [],
+	isInitialized: false,
+	
+	initializeStore: async () => {
+		try {
+			const storedData = await AsyncStorage.getItem(STORAGE_KEY);
+			if (storedData) {
+				const parsedData = JSON.parse(storedData);
+				set({ shoppingList: parsedData, isInitialized: true });
+			} else {
+				set({ isInitialized: true });
+			}
+		} catch (error) {
+			console.error('Error loading shopping list from storage:', error);
+			set({ isInitialized: true });
+		}
+	},
 	
 	addToShoppingList: (product: Product) => {
 		set((state) => {
@@ -29,64 +60,85 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 				item => item.name === product.name && item.unit === product.unit
 			);
 
+			let updatedList;
 			if (existingItemIndex !== -1) {
-				const updatedList = [...state.shoppingList];
+				updatedList = [...state.shoppingList];
 				updatedList[existingItemIndex] = {
 					...updatedList[existingItemIndex],
 					quantity: updatedList[existingItemIndex].quantity + product.quantity
 				};
-				return { shoppingList: updatedList };
 			} else {
-				return {
-					shoppingList: [...state.shoppingList, { ...product, isBought: false }],
-				};
+				updatedList = [...state.shoppingList, { ...product, isBought: false }];
 			}
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
 		});
 	},
 	
 	toggleBought: (id: string, index?: number) => {
-		set((state) => ({
-			shoppingList: state.shoppingList.map((item, idx) => {
+		set((state) => {
+			const updatedList = state.shoppingList.map((item, idx) => {
 				if (index !== undefined) {
 					return idx === index ? { ...item, isBought: !item.isBought } : item;
 				}
 				return item.id === id ? { ...item, isBought: !item.isBought } : item;
-			}),
-		}));
+			});
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
+		});
 	},
 	
 	removeBought: () => {
-		set((state) => ({
-			shoppingList: state.shoppingList.filter((item) => !item.isBought),
-		}));
+		set((state) => {
+			const updatedList = state.shoppingList.filter((item) => !item.isBought);
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
+		});
 	},
 	
 	updateQuantity: (id: string, index: number, newQuantity: number) => {
-		set((state) => ({
-			shoppingList: state.shoppingList.map((item, idx) => {
+		set((state) => {
+			const updatedList = state.shoppingList.map((item, idx) => {
 				if (idx === index && item.id === id) {
 					return { ...item, quantity: newQuantity };
 				}
 				return item;
-			}),
-		}));
+			});
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
+		});
 	},
 	
 	removeFromShoppingList: (id: string, index?: number) => {
 		set((state) => {
+			let updatedList;
+			
 			if (index !== undefined) {
-				return {
-					shoppingList: state.shoppingList.filter((_, idx) => idx !== index),
-				};
+				updatedList = state.shoppingList.filter((_, idx) => idx !== index);
 			} else {
 				const items = state.shoppingList.filter(item => item.id === id);
 				if (items.length === 0) return { shoppingList: state.shoppingList };
 				
 				const lastIndex = state.shoppingList.lastIndexOf(items[items.length - 1]);
-				return {
-					shoppingList: state.shoppingList.filter((_, idx) => idx !== lastIndex),
-				};
+				updatedList = state.shoppingList.filter((_, idx) => idx !== lastIndex);
 			}
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
 		});
 	},
 	
@@ -96,13 +148,16 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 				.filter(item => item.name === name && item.unit === unit)
 				.some(item => item.isBought);
 
-			return {
-				shoppingList: state.shoppingList.map(item =>
-					item.name === name && item.unit === unit
-						? { ...item, isBought: !groupIsBought }
-						: item
-				)
-			};
+			const updatedList = state.shoppingList.map(item =>
+				item.name === name && item.unit === unit
+					? { ...item, isBought: !groupIsBought }
+					: item
+			);
+			
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
 		});
 	},
 	
@@ -119,17 +174,19 @@ export const useShoppingStore = create<ShoppingStore>((set) => ({
 			
 			const decreaseAmount = baseProduct.quantity;
 			
+			let updatedList;
 			if (item.quantity <= decreaseAmount) {
-				return {
-					shoppingList: state.shoppingList.filter((_, idx) => idx !== lastIndex),
-				};
+				updatedList = state.shoppingList.filter((_, idx) => idx !== lastIndex);
+			} else {
+				updatedList = state.shoppingList.map((item, idx) => 
+					idx === lastIndex ? { ...item, quantity: item.quantity - decreaseAmount } : item
+				);
 			}
 			
-			return {
-				shoppingList: state.shoppingList.map((item, idx) => 
-					idx === lastIndex ? { ...item, quantity: item.quantity - decreaseAmount } : item
-				),
-			};
+			// Persist to storage
+			saveToStorage(updatedList);
+			
+			return { shoppingList: updatedList };
 		});
 	},
 }));
