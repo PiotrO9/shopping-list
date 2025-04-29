@@ -6,6 +6,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import ShoppingItem from '../components/ShoppingItem';
 import { useShoppingStore } from '../store/useShoppingStore';
 import GroupingSelector, { GroupingMethod, SortDirection } from '../components/ui/GroupingSelector';
+import ProgressBar from '../components/ui/ProgressBar';
 
 type RootStackParamList = {
 	ShoppingList: undefined;
@@ -68,6 +69,7 @@ function ShoppingListScreen() {
 	const inCartCount = groupedShoppingList.filter(item => item.isBought).length;
 	const totalItems = groupedShoppingList.length;
 	const remainingItems = totalItems - inCartCount;
+	const progress = totalItems > 0 ? inCartCount / totalItems : 0;
 
 	function handleRemoveBought() {
 		removeBought();
@@ -119,6 +121,11 @@ function ShoppingListScreen() {
 					/>
 					
 					<View style={styles.cartInfoContainer}>
+						<ProgressBar 
+							progress={progress}
+							color={remainingItems === 0 ? '#4CAF50' : '#2196F3'}
+							height={6}
+						/>
 						<Text style={styles.cartInfoText}>
 							{remainingItems > 0 
 								? `${remainingItems} item${remainingItems === 1 ? '' : 's'} left to buy`
@@ -216,6 +223,7 @@ const styles = StyleSheet.create({
 	cartInfoText: {
 		fontSize: 16,
 		color: '#666',
+		marginTop: 12,
 		marginBottom: 8,
 		textAlign: 'center',
 	},
