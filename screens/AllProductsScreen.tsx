@@ -1,27 +1,28 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, SectionList, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, SectionList, TextInput, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import ProductItem from '../components/ProductItem';
 import { sampleProducts } from '../store/useShoppingStore';
+import { getCategoryImage } from '../utils/categoryImages';
 
 const categories = [
-	"Dairy & Eggs",
-	"Bread & Bakery",
-	"Fruits",
-	"Vegetables",
-	"Meat & Seafood",
-	"Pantry Items",
-	"Canned Goods",
-	"Frozen Foods",
-	"Beverages",
-	"Snacks",
-	"Condiments",
-	"Baking",
-	"Dairy Alternatives"
+	"Dairy", // diary.png
+	"Bread & Bakery", // bread.png
+	"Fruits", // vegetables-fruits.png
+	"Vegetables", // vegetables-fruits.png
+	"Meat & Seafood", // meat.png
+	"Pantry Items", // jam.png
+	"Canned Goods", // jam.png
+	"Frozen Foods", // frozen.png
+	"Beverages", // water.png
+	"Snacks", // snack.png
+	"Condiments", // condiments.png
+	"Baking", // baking.png
+	"Dairy Alternatives" // alternative.png
 ];
 
 const categoryRanges = [
-	{ category: "Dairy & Eggs", start: 1, end: 8 },
+	{ category: "Dairy", start: 1, end: 8 },
 	{ category: "Bread & Bakery", start: 9, end: 16 },
 	{ category: "Fruits", start: 17, end: 26 },
 	{ category: "Vegetables", start: 27, end: 38 },
@@ -119,13 +120,28 @@ function AllProductsScreen() {
 						quantity={item.quantity}
 						unit={item.unit}
 						isEditing={isQuickMode}
+						category={item.category}
 					/>
 				)}
-				renderSectionHeader={({ section: { title } }) => (
-					<View style={styles.sectionHeader}>
-						<Text style={styles.sectionHeaderText}>{title}</Text>
-					</View>
-				)}
+				renderSectionHeader={({ section: { title } }) => {
+					const categoryImageSource = getCategoryImage(title);
+					return (
+						<View style={styles.sectionHeader}>
+							<View style={styles.sectionHeaderContent}>
+								{categoryImageSource && (
+									<View style={styles.sectionHeaderImageContainer}>
+										<Image 
+											source={categoryImageSource}
+											style={styles.sectionHeaderImage}
+											resizeMode="contain"
+										/>
+									</View>
+								)}
+								<Text style={styles.sectionHeaderText}>{title}</Text>
+							</View>
+						</View>
+					);
+				}}
 				stickySectionHeadersEnabled={true}
 				ListEmptyComponent={() => (
 					<View style={styles.emptyContainer}>
@@ -203,6 +219,24 @@ const styles = StyleSheet.create({
 		padding: 12,
 		borderBottomWidth: 1,
 		borderBottomColor: '#c8e6c9',
+	},
+	sectionHeaderContent: {
+		flexDirection: 'row',
+		alignItems: 'center',
+	},
+	sectionHeaderImageContainer: {
+		width: 24,
+		height: 24,
+		borderRadius: 12,
+		backgroundColor: '#f0f9f0',
+		marginRight: 8,
+		padding: 4,
+		justifyContent: 'center',
+		alignItems: 'center',
+	},
+	sectionHeaderImage: {
+		width: '100%',
+		height: '100%',
 	},
 	sectionHeaderText: {
 		fontSize: 16,

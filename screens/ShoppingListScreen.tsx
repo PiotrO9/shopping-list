@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import ShoppingItem from '../components/ShoppingItem';
 import { useShoppingStore } from '../store/useShoppingStore';
+import GroupingSelector, { GroupingMethod, SortDirection } from '../components/ui/GroupingSelector';
 
 type RootStackParamList = {
 	ShoppingList: undefined;
@@ -13,8 +14,8 @@ type RootStackParamList = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-function groupShoppingList(shoppingList: Array<{ id: string; name: string; quantity: number; unit: string; isBought?: boolean; }>) {
-	const groups: Record<string, { id: string; name: string; quantity: number; unit: string; isBought: boolean; ids: string[] }> = {};
+function groupShoppingList(shoppingList: Array<{ id: string; name: string; quantity: number; unit: string; isBought?: boolean; category: string; }>) {
+	const groups: Record<string, { id: string; name: string; quantity: number; unit: string; isBought: boolean; ids: string[]; category: string }> = {};
 	for (const item of shoppingList) {
 		const key = `${item.name}__${item.unit}`;
 		if (!groups[key]) {
@@ -32,13 +33,41 @@ function ShoppingListScreen() {
 	const shoppingList = useShoppingStore((state) => state.shoppingList);
 	const removeBought = useShoppingStore((state) => state.removeBought);
 	const toggleBoughtByNameUnit = useShoppingStore((state) => state.toggleBoughtByNameUnit);
+	const [groupingMethod, setGroupingMethod] = useState<GroupingMethod>('category');
+	const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
 	const groupedShoppingList = useMemo(() => {
 		const grouped = groupShoppingList(shoppingList);
-		return grouped.sort((a, b) => Number(a.isBought) - Number(b.isBought));
-	}, [shoppingList]);
+		const sorted = grouped.sort((a, b) => {
+			// First sort by bought status
+			if (a.isBought !== b.isBought) {
+				return Number(a.isBought) - Number(b.isBought);
+			}
+			
+			// Then sort by the selected method
+			let comparison = 0;
+			switch (groupingMethod) {
+				case 'category':
+					comparison = a.category.localeCompare(b.category);
+					break;
+				case 'alphabetical':
+					comparison = a.name.localeCompare(b.name);
+					break;
+				case 'quantity':
+					comparison = a.quantity - b.quantity;
+					break;
+			}
+
+			// Apply sort direction
+			return sortDirection === 'asc' ? comparison : -comparison;
+		});
+
+		return sorted;
+	}, [shoppingList, groupingMethod, sortDirection]);
 
 	const inCartCount = groupedShoppingList.filter(item => item.isBought).length;
+	const totalItems = groupedShoppingList.length;
+	const remainingItems = totalItems - inCartCount;
 
 	function handleRemoveBought() {
 		removeBought();
@@ -61,10 +90,21 @@ function ShoppingListScreen() {
 				</View>
 			) : (
 				<>
+					{shoppingList.length > 1 && (
+						<GroupingSelector 
+							currentGrouping={groupingMethod}
+							sortDirection={sortDirection}
+							onGroupingChange={(method, direction) => {
+								setGroupingMethod(method);
+								setSortDirection(direction);
+							}}
+						/>
+					)}
+					
 					<FlatList
 						data={groupedShoppingList}
-						keyExtractor={(item, index) => `${item.name}-${item.unit}`}
-						renderItem={({ item }: { item: { id: string; name: string; quantity: number; unit: string; isBought: boolean; ids: string[] } }) => (
+						keyExtractor={(item) => `${item.name}-${item.unit}`}
+						renderItem={({ item }) => (
 							<ShoppingItem
 								id={item.ids[0]}
 								name={item.name}
@@ -72,22 +112,45 @@ function ShoppingListScreen() {
 								unit={item.unit}
 								isBought={item.isBought}
 								onToggleBought={() => toggleBoughtByNameUnit(item.name, item.unit)}
+								category={item.category}
 							/>
 						)}
 						contentContainerStyle={styles.list}
 					/>
 					
-					{inCartCount > 0 && (
-						<TouchableOpacity 
-							style={styles.button}
-							onPress={handleRemoveBought}
-							activeOpacity={0.7}
-							accessibilityLabel="Remove items that are in cart"
-							accessibilityRole="button"
-						>
-							<Text style={styles.buttonText}>Remove Items In Cart ({inCartCount})</Text>
-						</TouchableOpacity>
-					)}
+					<View style={styles.cartInfoContainer}>
+						<Text style={styles.cartInfoText}>
+							{remainingItems > 0 
+								? `${remainingItems} item${remainingItems === 1 ? '' : 's'} left to buy`
+								: 'All items in cart!'
+							}
+						</Text>
+						{inCartCount > 0 && (
+							<TouchableOpacity 
+								style={[
+									styles.button,
+									remainingItems === 0 && styles.buttonComplete
+								]}
+								onPress={handleRemoveBought}
+								activeOpacity={0.7}
+								disabled={remainingItems > 0}
+								accessibilityLabel={
+									remainingItems > 0
+										? `${remainingItems} items left to buy`
+										: "Complete shopping and clear cart"
+								}
+								accessibilityRole="button"
+								accessibilityState={{ disabled: remainingItems > 0 }}
+							>
+								<Text style={styles.buttonText}>
+									{remainingItems === 0 
+										? "Complete Shopping"
+										: `Items In Cart (${inCartCount})`
+									}
+								</Text>
+							</TouchableOpacity>
+						)}
+					</View>
 				</>
 			)}
 
@@ -144,14 +207,29 @@ const styles = StyleSheet.create({
 		color: '#666',
 		textAlign: 'center',
 	},
+	cartInfoContainer: {
+		padding: 16,
+		backgroundColor: 'white',
+		borderTopWidth: 1,
+		borderTopColor: '#e0e0e0',
+	},
+	cartInfoText: {
+		fontSize: 16,
+		color: '#666',
+		marginBottom: 8,
+		textAlign: 'center',
+	},
 	button: {
-		margin: 16,
 		backgroundColor: '#F44336',
 		padding: 16,
 		borderRadius: 8,
 		alignItems: 'center',
 		justifyContent: 'center',
-		display: 'flex',
+		opacity: 0.5,
+	},
+	buttonComplete: {
+		opacity: 1,
+		backgroundColor: '#4CAF50',
 	},
 	buttonText: {
 		color: 'white',
@@ -173,11 +251,6 @@ const styles = StyleSheet.create({
 		shadowOffset: { width: 0, height: 2 },
 		shadowOpacity: 0.25,
 		shadowRadius: 4,
-	},
-	fabText: {
-		fontSize: 24,
-		color: 'white',
-		fontWeight: 'bold',
 	},
 });
 

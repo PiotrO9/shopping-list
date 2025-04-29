@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useShoppingStore } from '../store/useShoppingStore';
 import Checkbox from './ui/Checkbox';
 import Animated, { 
@@ -9,6 +9,8 @@ import Animated, {
 	withSequence,
 	Easing
 } from 'react-native-reanimated';
+import { getCategoryImage } from '../utils/categoryImages';
+import DefaultCategoryImage from './ui/DefaultCategoryImage';
 
 type ShoppingItemProps = {
 	id: string;
@@ -18,9 +20,10 @@ type ShoppingItemProps = {
 	isBought?: boolean;
 	index?: number;
 	onToggleBought?: () => void;
+	category?: string;
 };
 
-function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onToggleBought }: ShoppingItemProps) {
+function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onToggleBought, category = 'Other' }: ShoppingItemProps) {
 	const itemScale = useSharedValue(1);
 	const textOpacity = useSharedValue(1);
 	const backgroundOpacity = useSharedValue(0);
@@ -65,6 +68,8 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onTog
 		toggleBought(id, index);
 	}
 
+	const categoryImageSource = getCategoryImage(category);
+
 	return (
 		<View style={styles.touchableContainer}>
 			<Animated.View style={[styles.container, animatedContainerStyle]}>
@@ -95,6 +100,16 @@ function ShoppingItem({ id, name, quantity, unit, isBought = false, index, onTog
 						</Animated.Text>
 					</View>
 				</View>
+
+				{categoryImageSource && (
+					<View style={styles.categoryImageContainer}>
+						<Image 
+							source={categoryImageSource}
+							style={styles.categoryImage}
+							resizeMode="contain"
+						/>
+					</View>
+				)}
 			</Animated.View>
 		</View>
 	);
@@ -144,6 +159,25 @@ const styles = StyleSheet.create({
 	},
 	inCartText: {
 		color: '#4CAF50',
+	},
+	categoryImageContainer: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		backgroundColor: '#f0f9f0',
+		marginLeft: 12,
+		padding: 8,
+		justifyContent: 'center',
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: { width: 0, height: 2 },
+		shadowOpacity: 0.1,
+		shadowRadius: 4,
+		elevation: 2,
+	},
+	categoryImage: {
+		width: '100%',
+		height: '100%',
 	},
 });
 

@@ -18,6 +18,7 @@ type ProductItemProps = {
 	quantity: number;
 	unit: string;
 	isEditing?: boolean;
+	category: string;
 };
 
 function ProductItem({ 
@@ -25,7 +26,8 @@ function ProductItem({
 	name, 
 	quantity, 
 	unit, 
-	isEditing: externalIsEditing 
+	isEditing: externalIsEditing,
+	category
 }: ProductItemProps) {
 	const [added, setAdded] = useState(false);
 	const [selectedQuantity, setSelectedQuantity] = useState(quantity);
@@ -77,6 +79,7 @@ function ProductItem({
 			name,
 			quantity: selectedQuantity,
 			unit,
+			category,
 		});
 		
 		setAdded(true);
