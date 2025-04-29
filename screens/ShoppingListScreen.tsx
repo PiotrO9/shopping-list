@@ -40,12 +40,10 @@ function ShoppingListScreen() {
 	const groupedShoppingList = useMemo(() => {
 		const grouped = groupShoppingList(shoppingList);
 		const sorted = grouped.sort((a, b) => {
-			// First sort by bought status
 			if (a.isBought !== b.isBought) {
 				return Number(a.isBought) - Number(b.isBought);
 			}
 			
-			// Then sort by the selected method
 			let comparison = 0;
 			switch (groupingMethod) {
 				case 'category':
@@ -59,7 +57,6 @@ function ShoppingListScreen() {
 					break;
 			}
 
-			// Apply sort direction
 			return sortDirection === 'asc' ? comparison : -comparison;
 		});
 

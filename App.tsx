@@ -2,7 +2,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet } from 'react-native';
 import AllProductsScreen from './screens/AllProductsScreen';
 import ShoppingListScreen from './screens/ShoppingListScreen';
 
