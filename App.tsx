@@ -18,11 +18,9 @@ export default function App() {
 	const { initializeStore, isInitialized } = useShoppingStore();
 	
 	useEffect(() => {
-		// Initialize store and load data from AsyncStorage
 		initializeStore();
 	}, [initializeStore]);
 	
-	// Show loading indicator while store is initializing
 	if (!isInitialized) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>

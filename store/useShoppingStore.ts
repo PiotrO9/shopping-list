@@ -23,10 +23,8 @@ type ShoppingStore = {
 	initializeStore: () => Promise<void>;
 };
 
-// Storage keys
 const STORAGE_KEY = '@shopping_list_store';
 
-// Helper function to persist state to AsyncStorage
 const saveToStorage = async (shoppingList: Product[]) => {
 	try {
 		await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(shoppingList));
@@ -71,7 +69,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 				updatedList = [...state.shoppingList, { ...product, isBought: false }];
 			}
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -87,7 +84,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 				return item.id === id ? { ...item, isBought: !item.isBought } : item;
 			});
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -98,7 +94,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 		set((state) => {
 			const updatedList = state.shoppingList.filter((item) => !item.isBought);
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -114,7 +109,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 				return item;
 			});
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -135,7 +129,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 				updatedList = state.shoppingList.filter((_, idx) => idx !== lastIndex);
 			}
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -154,7 +147,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 					: item
 			);
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
@@ -183,7 +175,6 @@ export const useShoppingStore = create<ShoppingStore>((set, get) => ({
 				);
 			}
 			
-			// Persist to storage
 			saveToStorage(updatedList);
 			
 			return { shoppingList: updatedList };
